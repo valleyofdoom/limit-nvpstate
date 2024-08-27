@@ -125,7 +125,7 @@ std::string GetProcessNameByPID(DWORD pid) {
     return process_name;
 }
 
-void UnlimitPState(bool is_unlimit) {
+void SetPState(bool is_unlimit) {
     if (is_unlimit && !is_pstate_unlimited) {
         if (NvAPI_SetPstateClientLimits(gpu_handles[config["gpu_index"]], 3, 0) != 0) {
             std::cerr << "error: NvAPI_SetPstateClientLimits failed\n";
@@ -157,7 +157,7 @@ void CALLBACK WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idOb
 
     std::string process_name = ToLowerCase(GetProcessNameByPID(pid));
 
-    UnlimitPState(process_exceptions.count(process_name));
+    SetPState(process_exceptions.count(process_name));
 }
 
 int main(int argc, char** argv) {
@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
     }
 
     if (gpu_count == 0) {
-        std::cerr << "error: 0 GPUs found";
+        std::cerr << "error: 0 GPUs found\n";
         return 1;
     }
 
