@@ -1,0 +1,8 @@
+{
+    "gpu_index": 0,
+    "pstate_limit": 8,
+    "process_exceptions": [
+        "notepad.exe",
+        "mspaint.exe"
+    ]
+}

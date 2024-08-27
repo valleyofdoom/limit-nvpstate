@@ -1,0 +1,56 @@
+name: Create release
+run-name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version of the program to build. This will be used for the tag and release name."
+        required: true
+
+      pre-release:
+        description: "Pre-release"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC environment
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Set up vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+          .\vcpkg\vcpkg.exe integrate install
+
+      - name: Install dependencies (vspkg.json)
+        run: .\vcpkg\vcpkg.exe install
+
+      - name: Build
+        run: .\build.ps1
+
+      - name: Zip release
+        run: Compress-Archive -Path build\limit-nvpstate -DestinationPath limit-nvpstate.zip
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.version }}
+          name: limit-nvpstate v${{ inputs.version }}
+          prerelease: ${{ inputs.pre-release }}
+          artifacts: limit-nvpstate.zip
+          generateReleaseNotes: true
