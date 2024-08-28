@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <Psapi.h>
 #include <tlhelp32.h>
-#include <fstream> 
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <args.hxx>
 
@@ -72,15 +72,15 @@ int NvAPI_SetPstateClientLimits(NvPhysicalGpuHandle handle, unsigned int pstate_
 }
 
 std::string WStringToString(const std::wstring& wstr) {
-    // get required buffer size for the multi-byte str
+    // get required buffer size for the multi-byte str, excluding the null terminator
     int size_required = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
 
     if (size_required == 0) {
         return "";
     }
 
-    // allocate buffer and perform the conversion
-    std::string str(size_required, '\0');
+    // create string with the correct size, excluding the null terminator
+    std::string str(size_required - 1, '\0'); // subtract 1 to exclude the null terminator
     WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], size_required, NULL, NULL);
     return str;
 }
