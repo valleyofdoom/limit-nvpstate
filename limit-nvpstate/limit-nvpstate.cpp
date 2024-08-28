@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::string version = "4.0.0";
+    std::string version = "4.0.1";
 
     args::ArgumentParser args_parser("limit-nvpstate Version " + version + " - GPLv3\nGitHub - https://github.com/valleyofdoom\n");
     args::HelpFlag args_help(args_parser, "", "display this help menu", { "help" });
