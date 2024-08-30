@@ -25,7 +25,7 @@ function main() {
     Copy-Item ".\x64\Release\limit-nvpstate.exe" ".\build\limit-nvpstate\"
     Copy-Item ".\x64\Release\config.json" ".\build\limit-nvpstate\"
 
-    windeployqt.exe ".\build\limit-nvpstate\limit-nvpstate.exe" --no-system-d3d-compiler --no-translations
+    windeployqt.exe ".\build\limit-nvpstate\limit-nvpstate.exe" --no-system-d3d-compiler --no-translations --no-opengl-sw --no-angle
 
     return 0
 }
