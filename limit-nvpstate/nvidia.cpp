@@ -28,7 +28,7 @@ void* NvAPI_Query(uint32_t id) {
     return reinterpret_cast<QueryPtr>(GetProcAddress(hNvAPI, "nvapi_QueryInterface"))(id);
 }
 
-int NvAPI_SetPstateClientLimits(NvPhysicalGpuHandle handle, unsigned int pstateType, unsigned int pStateLimit) {
+int NvAPI_SetPstateClientLimits(NvPhysicalGpuHandle hPhysicalGpu, unsigned int pstateType, unsigned int pStateLimit) {
     static NvAPI_Status(*pointer)(NvPhysicalGpuHandle, unsigned int, unsigned int) = NULL;
 
     if (!pointer) {
@@ -39,12 +39,12 @@ int NvAPI_SetPstateClientLimits(NvPhysicalGpuHandle handle, unsigned int pstateT
         return 1;
     }
 
-    return (*pointer)(handle, pstateType, pStateLimit);
+    return (*pointer)(hPhysicalGpu, pstateType, pStateLimit);
 }
 
-int SetPState(NvPhysicalGpuHandle hGPU, bool isUnlimit, unsigned int pStateLimit = 0) {
+int SetPState(NvPhysicalGpuHandle hPhysicalGpu, bool isUnlimit, unsigned int pStateLimit = 0) {
     if (isUnlimit && !isPStateUnlimited) {
-        if (NvAPI_SetPstateClientLimits(hGPU, 3, 0) != 0) {
+        if (NvAPI_SetPstateClientLimits(hPhysicalGpu, 3, 0) != 0) {
             std::cerr << "error: NvAPI_SetPstateClientLimits failed\n";
             return 1;
         }
@@ -52,7 +52,7 @@ int SetPState(NvPhysicalGpuHandle hGPU, bool isUnlimit, unsigned int pStateLimit
         std::cout << "info: set P0\n";
         isPStateUnlimited = true;
     } else if (!isUnlimit && isPStateUnlimited) {
-        if (NvAPI_SetPstateClientLimits(hGPU, 3, pStateLimit) != 0) {
+        if (NvAPI_SetPstateClientLimits(hPhysicalGpu, 3, pStateLimit) != 0) {
             std::cerr << "error: NvAPI_SetPstateClientLimits failed\n";
             return 1;
         }

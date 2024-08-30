@@ -8,7 +8,7 @@
 #include <QFileDialog>
 
 std::unordered_set<std::string> cachedProcessExceptions;
-NvPhysicalGpuHandle hGPUs[NVAPI_MAX_PHYSICAL_GPUS];
+NvPhysicalGpuHandle hPhysicalGpus[NVAPI_MAX_PHYSICAL_GPUS];
 HWINEVENTHOOK eventHook;
 
 void WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime) {
@@ -23,7 +23,7 @@ void WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LON
 
     std::cout << "info: " << processName << " is fg window (excepted: " << std::boolalpha << isProcessExcepted << ")\n";
 
-    if (SetPState(hGPUs[config["gpu_index"]], isProcessExcepted, config["pstate_limit"]) != 0) {
+    if (SetPState(hPhysicalGpus[config["gpu_index"]], isProcessExcepted, config["pstate_limit"]) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
@@ -39,7 +39,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
     }
 
     unsigned long gpuCount = 0;
-    if (NvAPI_EnumPhysicalGPUs(hGPUs, &gpuCount) != 0) {
+    if (NvAPI_EnumPhysicalGPUs(hPhysicalGpus, &gpuCount) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to enumerate physical GPUs");
         exit(1);
     }
@@ -80,7 +80,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
     for (unsigned int i = 0; i < gpuCount; ++i) {
         char gpuFullName[NVAPI_SHORT_STRING_MAX];
 
-        if (NvAPI_GPU_GetFullName(hGPUs[i], gpuFullName) != 0) {
+        if (NvAPI_GPU_GetFullName(hPhysicalGpus[i], gpuFullName) != 0) {
             QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to obtain GPU name");
             exit(1);
         }
@@ -132,7 +132,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
         });
 
     // limit p-state initially
-    if (SetPState(hGPUs[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
+    if (SetPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
@@ -205,7 +205,7 @@ void limitnvpstate::saveProcessExceptions() {
 }
 
 void limitnvpstate::closeEvent(QCloseEvent* event) {
-    if (SetPState(hGPUs[ui.selectedGPU->currentIndex()], true) != 0) {
+    if (SetPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], true) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
