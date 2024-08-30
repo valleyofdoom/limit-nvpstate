@@ -4,6 +4,17 @@
 #include <config.h>
 
 int main(int argc, char* argv[]) {
+    CreateMutexA(NULL, 1, "limit-nvpstate");
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        HWND hWnd = FindWindowA(NULL, "limit-nvpstate");
+
+        if (hWnd) {
+            SetForegroundWindow(hWnd);
+        }
+        return 0;
+    }
+
     // cd to the directory of the current executable
     std::string executableDirectory = getBasePath(getProgramPath());
     std::filesystem::current_path(executableDirectory);
