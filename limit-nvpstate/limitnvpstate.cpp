@@ -99,7 +99,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
         exit(1);
     }
 
-    for (int i = 0; i < pStatesInfo.numPstates; i++) {
+    for (int i = 1; i < pStatesInfo.numPstates; i++) {
         int pState = pStatesInfo.pstates[i].pstateId;
         ui.selectedPState->addItem(QString::fromStdString("P" + std::to_string(pState)));
     }
