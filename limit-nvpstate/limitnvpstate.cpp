@@ -91,8 +91,17 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
     ui.selectedGPU->setCurrentIndex(config["gpu_index"]);
     connect(ui.selectedGPU, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGPUChanged(int)));
 
-    for (int i = 2; i <= 12; i++) {
-        ui.selectedPState->addItem(QString::fromStdString("P" + std::to_string(i)));
+    NV_GPU_PERF_PSTATES20_INFO pStatesInfo;
+    pStatesInfo.version = NV_GPU_PERF_PSTATES20_INFO_VER;
+
+    if (NvAPI_GPU_GetPstates20(hPhysicalGpus[0], &pStatesInfo) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to obtain available P-States");
+        exit(1);
+    }
+
+    for (int i = 0; i < pStatesInfo.numPstates; i++) {
+        int pState = pStatesInfo.pstates[i].pstateId;
+        ui.selectedPState->addItem(QString::fromStdString("P" + std::to_string(pState)));
     }
 
     std::string selectedPstate = "P" + std::to_string((int)config["pstate_limit"]);
