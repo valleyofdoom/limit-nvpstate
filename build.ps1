@@ -21,11 +21,11 @@ function main() {
     # build application
     MSBuild.exe ".\limit-nvpstate.sln" -p:Configuration=Release -p:Platform=x64
 
-    # Start-Process -FilePath "cmd.exe" -ArgumentList "/c tree /F" -NoNewWindow -Wait
-
     # create final package
     Copy-Item ".\x64\Release\limit-nvpstate.exe" ".\build\limit-nvpstate\"
     Copy-Item ".\x64\Release\config.json" ".\build\limit-nvpstate\"
+
+    windeployqt.exe ".\build\limit-nvpstate\limit-nvpstate.exe" --no-system-d3d-compiler --no-translations
 
     return 0
 }

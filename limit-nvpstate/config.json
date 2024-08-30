@@ -1,8 +1,6 @@
 {
     "gpu_index": 0,
+    "process_exceptions": [],
     "pstate_limit": 8,
-    "process_exceptions": [
-        "notepad.exe",
-        "mspaint.exe"
-    ]
+    "start_minimized": false
 }

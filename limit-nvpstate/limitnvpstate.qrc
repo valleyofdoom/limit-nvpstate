@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/limitnvpstate">
+        <file>icon.ico</file>
+    </qresource>
+</RCC>

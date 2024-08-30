@@ -37,7 +37,16 @@ jobs:
           .\vcpkg\bootstrap-vcpkg.bat
           .\vcpkg\vcpkg.exe integrate install
 
-      - name: Install dependencies (vspkg.json)
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.14.2'
+
+      - name: Configure QtToolsPath environment variable
+        run: |
+          "QtToolsPath=$($env:Qt5_DIR)\bin" >> $env:GITHUB_ENV
+
+      - name: Install dependencies (vcpkg.json)
         run: .\vcpkg\vcpkg.exe install
 
       - name: Build
