@@ -114,16 +114,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="about.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="nvidia.cpp" />
     <ClCompile Include="utils.cpp" />
     <QtRcc Include="limitnvpstate.qrc" />
+    <QtUic Include="about.ui" />
     <QtUic Include="limitnvpstate.ui" />
     <QtMoc Include="limitnvpstate.h" />
     <ClCompile Include="limitnvpstate.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="about.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="nvidia.h" />
     <ClInclude Include="resource.h" />

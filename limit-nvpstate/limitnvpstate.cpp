@@ -4,9 +4,9 @@
 #include <QMessageBox>
 #include <config.h>
 #include <utils.h>
-#include <QDesktopServices>
 #include <QFileDialog>
 #include <QCloseEvent>
+#include <about.h>
 
 std::unordered_set<std::string> cachedProcessExceptions;
 NvPhysicalGpuHandle hPhysicalGpus[NVAPI_MAX_PHYSICAL_GPUS];
@@ -72,8 +72,8 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
 
     // help -> about
     connect(ui.actionAbout, &QAction::triggered, [this]() {
-        QUrl url("https://github.com/valleyofdoom");
-        QDesktopServices::openUrl(url);
+        about about;
+        about.exec();
         });
 
     // add GPUs to combobox
