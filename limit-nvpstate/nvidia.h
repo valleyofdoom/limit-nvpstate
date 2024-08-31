@@ -6,4 +6,4 @@
 extern bool isPStateUnlimited;
 
 int initNvAPI();
-int SetPState(NvPhysicalGpuHandle hPhysicalGpu, bool isUnlimit, unsigned int pStateLimit = 0);
+int setPState(NvPhysicalGpuHandle hPhysicalGpu, bool isUnlimit, unsigned int pStateLimit = 0);

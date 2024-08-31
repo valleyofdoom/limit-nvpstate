@@ -23,7 +23,7 @@ void WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LON
 
     std::cout << "info: " << processName << " is fg window (excepted: " << std::boolalpha << isProcessExcepted << ")\n";
 
-    if (SetPState(hPhysicalGpus[config["gpu_index"]], isProcessExcepted, config["pstate_limit"]) != 0) {
+    if (setPState(hPhysicalGpus[config["gpu_index"]], isProcessExcepted, config["pstate_limit"]) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
@@ -132,7 +132,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
         });
 
     // limit p-state initially
-    if (SetPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
+    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
@@ -205,7 +205,7 @@ void limitnvpstate::saveProcessExceptions() {
 }
 
 void limitnvpstate::closeEvent(QCloseEvent* event) {
-    if (SetPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], true) != 0) {
+    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], true) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
     }
