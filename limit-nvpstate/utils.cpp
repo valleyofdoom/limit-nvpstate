@@ -52,11 +52,11 @@ int addToStartup(bool isEnabled) {
         exit(1);
     }
 
-    std::string value = getProgramPath();
+    std::string programPath = getProgramPath();
 
     int result;
     if (isEnabled) {
-        result = RegSetValueExA(hKey, KEY_NAME_RUN.c_str(), 0, REG_SZ, (const BYTE*)value.c_str(), value.size() + 1);
+        result = RegSetValueExA(hKey, KEY_NAME_RUN.c_str(), 0, REG_SZ, (const BYTE*)programPath.c_str(), programPath.size() + 1);
     } else {
         result = RegDeleteValueA(hKey, KEY_NAME_RUN.c_str());
     }
@@ -81,7 +81,7 @@ std::string getBaseName(std::string& fullPath) {
     return std::string(executableName);
 }
 
-std::string WStringToString(const std::wstring& wstr) {
+std::string wStringToString(const std::wstring& wstr) {
     // get required buffer size for the multi-byte str, excluding the null terminator
     int requiredSize = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
 
@@ -125,7 +125,7 @@ std::string getProcessNameByPID(DWORD pid) {
     if (Process32First(hSnapshot, &processEntry)) {
         do {
             if (processEntry.th32ProcessID == pid) {
-                processName = WStringToString(processEntry.szExeFile);
+                processName = wStringToString(processEntry.szExeFile);
                 break;
             }
         } while (Process32Next(hSnapshot, &processEntry));

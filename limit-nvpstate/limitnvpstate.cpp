@@ -77,7 +77,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
 
     // add GPUs to combobox
 
-    for (unsigned int i = 0; i < gpuCount; ++i) {
+    for (unsigned int i = 0; i < gpuCount; i++) {
         char gpuFullName[NVAPI_SHORT_STRING_MAX];
 
         if (NvAPI_GPU_GetFullName(hPhysicalGpus[i], gpuFullName) != 0) {
@@ -88,25 +88,16 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
         ui.selectedGPU->addItem(gpuFullName);
     }
 
+    if (!(config["gpu_index"] >= (gpuCount - 1) && config["gpu_index"] <= (gpuCount - 1))) {
+        config["gpu_index"] = 0;
+        saveConfig();
+    }
+
     ui.selectedGPU->setCurrentIndex(config["gpu_index"]);
     connect(ui.selectedGPU, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedGPUChanged(int)));
 
-    NV_GPU_PERF_PSTATES20_INFO pStatesInfo;
-    pStatesInfo.version = NV_GPU_PERF_PSTATES20_INFO_VER;
-
-    if (NvAPI_GPU_GetPstates20(hPhysicalGpus[0], &pStatesInfo) != 0) {
-        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to obtain available P-States");
-        exit(1);
-    }
-
-    for (int i = 1; i < pStatesInfo.numPstates; i++) {
-        int pState = pStatesInfo.pstates[i].pstateId;
-        ui.selectedPState->addItem(QString::fromStdString("P" + std::to_string(pState)));
-    }
-
-    std::string selectedPstate = "P" + std::to_string((int)config["pstate_limit"]);
-
-    ui.selectedPState->setCurrentText(QString::fromStdString(selectedPstate));
+    // add P-States to combobox
+    getAvailablePStates();
     connect(ui.selectedPState, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedPStateChanged(int)));
 
     // add process button
@@ -174,14 +165,40 @@ void limitnvpstate::createTrayIcon() {
 }
 
 void limitnvpstate::selectedGPUChanged(int index) {
+    // unlimit P-State for current GPU
+    int prevGpuIndex = config["gpu_index"];
+
+    if (setPState(hPhysicalGpus[prevGpuIndex], true) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
+        exit(1);
+    }
+
+    // limit P-State for the new GPU
     config["gpu_index"] = index;
     saveConfig();
+
+    // get available P-States for new GPU selection
+    getAvailablePStates();
+
+    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
+        exit(1);
+    }
 }
 
 void limitnvpstate::selectedPStateChanged(int index) {
-    std::string selected_pstate = ui.selectedPState->currentText().toStdString().substr(1);
-    config["pstate_limit"] = std::stoi(selected_pstate);
+    std::string selectedPstate = ui.selectedPState->currentText().toStdString().substr(1);
+    config["pstate_limit"] = std::stoi(selectedPstate);
     saveConfig();
+
+    // this is required to change the P-State while it is limited
+    // this can be interpreted as setting P0 before switching to the new P-State limit
+    isPStateUnlimited = true;
+
+    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], false, config["pstate_limit"]) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
+        exit(1);
+    }
 }
 
 void limitnvpstate::saveProcessExceptions() {
@@ -235,13 +252,22 @@ void limitnvpstate::addProcess() {
         return;
     }
 
+    std::string programPath = getProgramPath();
+    std::string programExecutableName = getBaseName(programPath);
+
     for (QString selectedFilePath : selectedFilePaths) {
         std::string filePathStr = selectedFilePath.toStdString();
 
         // replace "/" with "\"
         std::replace(filePathStr.begin(), filePathStr.end(), '/', '\\');
 
-        QString executableName = QString::fromStdString(getBaseName(filePathStr));
+        std::string executableBaseName = getBaseName(filePathStr);
+
+        if (executableBaseName == programExecutableName) {
+            continue;
+        }
+
+        QString executableName = QString::fromStdString(executableBaseName);
 
         // don't add if already in list to prevent duplicates
         if (ui.processExceptionsList->findItems(executableName, Qt::MatchExactly).isEmpty()) {
@@ -250,4 +276,40 @@ void limitnvpstate::addProcess() {
     }
 
     saveProcessExceptions();
+}
+
+void limitnvpstate::getAvailablePStates() {
+    NV_GPU_PERF_PSTATES20_INFO pStatesInfo;
+    pStatesInfo.version = NV_GPU_PERF_PSTATES20_INFO_VER;
+
+    if (NvAPI_GPU_GetPstates20(hPhysicalGpus[0], &pStatesInfo) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to obtain available P-States");
+        exit(1);
+    }
+
+    // clear any items already added
+    ui.selectedPState->clear();
+
+    // used to validate selection
+    std::vector<int> availablePStates;
+
+    for (int i = 1; i < pStatesInfo.numPstates; i++) {
+        int pState = pStatesInfo.pstates[i].pstateId;
+        availablePStates.push_back(pState);
+
+        ui.selectedPState->addItem(QString::fromStdString("P" + std::to_string(pState)));
+    }
+
+    // handle invalid selection
+    bool isSelectedPStateValid = std::find(availablePStates.begin(), availablePStates.end(), config["pstate_limit"]) != availablePStates.end();
+
+    if (!isSelectedPStateValid) {
+        config["pstate_limit"] = availablePStates.back();
+        saveConfig();
+    }
+
+    // set option in interface
+    std::string selectedPstate = "P" + std::to_string((int)config["pstate_limit"]);
+    QString selectedPStateQString = QString::fromStdString(selectedPstate);
+    ui.selectedPState->setCurrentText(selectedPStateQString);
 }

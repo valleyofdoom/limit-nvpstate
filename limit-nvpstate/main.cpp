@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
     }
 
     // cd to the directory of the current executable
-    std::string executableDirectory = getBasePath(getProgramPath());
-    std::filesystem::current_path(executableDirectory);
+    std::string programExecutableDirectory = getBasePath(getProgramPath());
+    std::filesystem::current_path(programExecutableDirectory);
 
     // init config
     if (initConfig() != 0) {

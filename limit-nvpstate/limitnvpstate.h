@@ -14,6 +14,7 @@ private:
 
     void createTrayIcon();
     void saveProcessExceptions();
+    void getAvailablePStates();
 
 private slots:
     void selectedGPUChanged(int index);
