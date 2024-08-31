@@ -20,6 +20,7 @@ private slots:
     void selectedGPUChanged(int index);
     void selectedPStateChanged(int index);
     void addProcess();
+    void exitApp(int exitCode);
 
 protected:
     void closeEvent(QCloseEvent* event) override;

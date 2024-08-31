@@ -6,6 +6,7 @@
 #include <utils.h>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QCloseEvent>
 
 std::unordered_set<std::string> cachedProcessExceptions;
 NvPhysicalGpuHandle hPhysicalGpus[NVAPI_MAX_PHYSICAL_GPUS];
@@ -141,8 +142,7 @@ void limitnvpstate::createTrayIcon() {
 
     QAction* trayActionExit = new QAction("Exit", this);
     connect(trayActionExit, &QAction::triggered, [this]() {
-        closeEvent(nullptr);
-        exit(0);
+        exitApp(0);
         });
     trayMenu->addAction(trayActionExit);
 
@@ -222,13 +222,9 @@ void limitnvpstate::saveProcessExceptions() {
 }
 
 void limitnvpstate::closeEvent(QCloseEvent* event) {
-    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], true) != 0) {
-        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
-        exit(1);
-    }
-
-    // cleanup
-    UnhookWinEvent(eventHook);
+    // hide instead of closing
+    hide();
+    event->ignore();
 }
 
 void limitnvpstate::changeEvent(QEvent* e) {
@@ -312,4 +308,15 @@ void limitnvpstate::getAvailablePStates() {
     std::string selectedPstate = "P" + std::to_string((int)config["pstate_limit"]);
     QString selectedPStateQString = QString::fromStdString(selectedPstate);
     ui.selectedPState->setCurrentText(selectedPStateQString);
+}
+
+void limitnvpstate::exitApp(int exitCode) {
+    if (setPState(hPhysicalGpus[ui.selectedGPU->currentIndex()], true) != 0) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
+        exit(1);
+    }
+
+    // cleanup
+    UnhookWinEvent(eventHook);
+    exit(exitCode);
 }
