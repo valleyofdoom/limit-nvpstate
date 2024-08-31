@@ -67,7 +67,7 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
 
     // file -> exit
     connect(ui.actionExit, &QAction::triggered, [this]() {
-        exit(1);
+        exitApp(0);
         });
 
     // help -> about
