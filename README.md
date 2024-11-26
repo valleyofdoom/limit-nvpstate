@@ -7,3 +7,5 @@ This program acts as a lightweight alternative to NVIDIA Inspector's "Multi-Disp
 Place the program folder somewhere safe and enable "Add To Startup" in the File menu. Populate the process exclusion list with applications you do not wish P-States to be limited for while the application's window is in the foreground.
 
 Note that closing the application by clicking "exit" in the tray menu will unlimit P-States before closing. If the program ends abruptly (ending the process in task manager), the unlimit action will not be executed when exiting.
+
+Disclaimer: applications running in fullscreen mode (legacy flip), may not be detected when in the foreground. When a fix/alternative is developed, this disclaimer will be removed.
