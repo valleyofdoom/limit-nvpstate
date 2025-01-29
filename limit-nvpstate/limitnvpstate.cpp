@@ -187,6 +187,11 @@ void limitnvpstate::selectedGPUChanged(int index) {
 }
 
 void limitnvpstate::selectedPStateChanged(int index) {
+    // when changing GPU, clear() is called on the combobox which triggers this with index -1 and causes a crash
+    if (index < 0) {
+        return;
+    }
+
     std::string selectedPstate = ui.selectedPState->currentText().toStdString().substr(1);
     config["pstate_limit"] = std::stoi(selectedPstate);
     saveConfig();
