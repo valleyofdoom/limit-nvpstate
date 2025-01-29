@@ -4,9 +4,9 @@
 #include <config.h>
 
 int main(int argc, char* argv[]) {
-    CreateMutexA(NULL, 1, "limit-nvpstate");
-
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    CreateMutexA(NULL, 1, "limit-nvpstate");
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         HWND hWnd = FindWindowA(NULL, "limit-nvpstate");
