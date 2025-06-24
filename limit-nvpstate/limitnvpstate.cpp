@@ -46,6 +46,7 @@ void pollProcesses() {
         }
 
         std::string processName = "";
+        unsigned long processId = -1;
 
         PROCESSENTRY32 processEntry;
         processEntry.dwSize = sizeof(PROCESSENTRY32);
@@ -59,18 +60,33 @@ void pollProcesses() {
 
                 if (isProcessExcepted) {
                     isUnlimit = true;
+                    processId = processEntry.th32ProcessID;
                     break;
                 }
-
             } while (Process32Next(hSnapshot, &processEntry));
         }
 
         CloseHandle(hSnapshot);
 
-
         if (setPState(hPhysicalGpus[config["gpu_index"]], isUnlimit, config["pstate_limit"]) != 0) {
             QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
             exit(1);
+        }
+
+        // wait for process to exit
+        if (processId >= 0) {
+            HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, processId);
+            
+            if (hProcess) {
+                std::cout << "waiting for " << processName << " to exit\n";
+                WaitForSingleObject(hProcess, INFINITE); // wait indefinitely for the process to exit
+                std::cout << processName << " exited.\n";
+                CloseHandle(hProcess);
+            } else {
+                std::cerr << "info: failed to open process: " << processName << " \n";
+            }
+        } else {
+            std::cerr << "info: failed to get PID: " << processName << " \n";
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(config["process_running_polling"]));
