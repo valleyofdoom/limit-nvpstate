@@ -8,4 +8,4 @@ Place the program folder somewhere safe and enable "Add To Startup" in the File 
 
 Note that closing the application by clicking "exit" in the tray menu will unlimit P-States before closing. If the program ends abruptly (ending the process in task manager), the unlimit action will not be executed when exiting.
 
-Disclaimer: applications running in fullscreen mode (legacy flip), may not be detected when in the foreground. When a fix/alternative is developed, this disclaimer will be removed.
+Disclaimer: applications running in fullscreen mode (legacy flip), may not be detected when in the foreground. If this occurs, switch the unlimit trigger to running processes instead.
