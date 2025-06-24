@@ -12,11 +12,16 @@ public:
 private:
     Ui::limitnvpstateClass ui;
 
+    void setupProcessRunningTrigger();
+    void stopProcessRunningTrigger();
+    void setupProcessForegroundTrigger();
+    void stopProcessForegroundTrigger();
     void createTrayIcon();
     void saveProcessExceptions();
     void getAvailablePStates();
 
 private slots:
+    void unlimitTriggerChanged(int index);
     void selectedGPUChanged(int index);
     void selectedPStateChanged(int index);
     void addProcess();

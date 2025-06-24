@@ -2,5 +2,7 @@
     "gpu_index": 0,
     "process_exceptions": [],
     "pstate_limit": 8,
-    "start_minimized": false
+    "start_minimized": false,
+    "unlimit_trigger": 0,
+    "process_running_polling": 5000
 }

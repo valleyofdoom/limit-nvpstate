@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>240</height>
+    <height>270</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -22,32 +22,53 @@
   <property name="maximumSize">
    <size>
     <width>480</width>
-    <height>240</height>
+    <height>270</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>limit-nvpstate</string>
   </property>
   <property name="windowIcon">
-   <iconset theme=":/limitnvpstate/icon.ico"/>
+   <iconset theme=":/limitnvpstate/icon.ico">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Process Exceptions</string>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="maximumSize">
+       <size>
+        <width>300</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>Process Exceptions</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QListWidget" name="processExceptionsList"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>
-          <widget class="QListWidget" name="processExceptionsList"/>
+          <widget class="QPushButton" name="addProcess">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="removeProcess">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+          </widget>
          </item>
         </layout>
-       </widget>
-      </item>
-     </layout>
+       </item>
+      </layout>
+     </widget>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -76,24 +97,13 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_4">
+       <widget class="QGroupBox" name="groupBox_5">
         <property name="title">
-         <string>Configure Processes</string>
+         <string>Unlimit Trigger</string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QPushButton" name="addProcess">
-           <property name="text">
-            <string>Add</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="removeProcess">
-           <property name="text">
-            <string>Remove</string>
-           </property>
-          </widget>
+          <widget class="QComboBox" name="unlimitTrigger"/>
          </item>
         </layout>
        </widget>

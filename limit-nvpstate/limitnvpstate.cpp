@@ -7,10 +7,14 @@
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <about.h>
+#include <tlhelp32.h>
+#include <thread>
 
 std::unordered_set<std::string> cachedProcessExceptions;
 NvPhysicalGpuHandle hPhysicalGpus[NVAPI_MAX_PHYSICAL_GPUS];
 HWINEVENTHOOK eventHook;
+std::string unlimitTriggers[] = { "Process Running", "Process Foreground" };
+std::atomic<bool> isThreadRunning(true); // control process running thread
 
 void WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime) {
     // this corrects the hwnd after a EVENT_SYSTEM_FOREGROUND event
@@ -27,6 +31,49 @@ void WinEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LON
     if (setPState(hPhysicalGpus[config["gpu_index"]], isProcessExcepted, config["pstate_limit"]) != 0) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
         exit(1);
+    }
+}
+
+void pollProcesses() {
+    while (isThreadRunning) {
+        bool isUnlimit = false;
+
+        HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+        if (!hSnapshot) {
+            QMessageBox::critical(nullptr, "limit-nvpstate", "Error: CreateToolhelp32Snapshot failed");
+            exit(1);
+        }
+
+        std::string processName = "";
+
+        PROCESSENTRY32 processEntry;
+        processEntry.dwSize = sizeof(PROCESSENTRY32);
+
+        if (Process32First(hSnapshot, &processEntry)) {
+            do {
+                processName = toLower(wStringToString(processEntry.szExeFile));
+                bool isProcessExcepted = cachedProcessExceptions.count(processName);
+
+                std::cout << "info: " << processName << " is running (excepted: " << std::boolalpha << isProcessExcepted << ")\n";
+
+                if (isProcessExcepted) {
+                    isUnlimit = true;
+                    break;
+                }
+
+            } while (Process32Next(hSnapshot, &processEntry));
+        }
+
+        CloseHandle(hSnapshot);
+
+
+        if (setPState(hPhysicalGpus[config["gpu_index"]], isUnlimit, config["pstate_limit"]) != 0) {
+            QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to set P-State");
+            exit(1);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(config["process_running_polling"]));
     }
 }
 
@@ -101,6 +148,20 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
     getAvailablePStates();
     connect(ui.selectedPState, SIGNAL(currentIndexChanged(int)), this, SLOT(selectedPStateChanged(int)));
 
+    // add states to combobox
+    for (std::string unlimitTrigger : unlimitTriggers) {
+        ui.unlimitTrigger->addItem(QString::fromStdString(unlimitTrigger));
+    }
+
+    int triggerCount = sizeof(unlimitTriggers) / sizeof(unlimitTriggers[0]);
+    if (config["unlimit_trigger"] < 0 || config["unlimit_trigger"] > triggerCount) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Invalid unlimit_trigger index in config");
+        exit(1);
+    }
+
+    ui.unlimitTrigger->setCurrentIndex(config["unlimit_trigger"]);
+    connect(ui.unlimitTrigger, SIGNAL(currentIndexChanged(int)), this, SLOT(unlimitTriggerChanged(int)));
+
     // add process button
     for (std::string processException : config["process_exceptions"]) {
         ui.processExceptionsList->addItem(QString::fromStdString(processException));
@@ -129,10 +190,38 @@ limitnvpstate::limitnvpstate(QWidget* parent) : QMainWindow(parent) {
         exit(1);
     }
 
+    if (config["unlimit_trigger"] == 0) {
+        setupProcessRunningTrigger();
+    } else if (config["unlimit_trigger"] == 1) {
+        setupProcessForegroundTrigger();
+    }
+}
+
+void limitnvpstate::setupProcessRunningTrigger() {
+    isThreadRunning = true;
+    std::thread thread(pollProcesses);
+    thread.detach();
+    //if (thread.joinable()) {
+    //    thread.join();
+    //}
+}
+
+void limitnvpstate::stopProcessRunningTrigger() {
+    isThreadRunning = false;
+}
+
+void limitnvpstate::setupProcessForegroundTrigger() {
     eventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
 
     if (!eventHook) {
         QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to configure global hook");
+        exit(1);
+    }
+}
+
+void limitnvpstate::stopProcessForegroundTrigger() {
+    if (!UnhookWinEvent(eventHook)) {
+        QMessageBox::critical(nullptr, "limit-nvpstate", "Error: Failed to unhook global hook");
         exit(1);
     }
 }
@@ -162,6 +251,27 @@ void limitnvpstate::createTrayIcon() {
             }
         }
         });
+}
+
+void limitnvpstate::unlimitTriggerChanged(int index) {
+    // clean up previous trigger method
+    int prevUnlimitTriggerIndex = config["unlimit_trigger"];
+
+    if (prevUnlimitTriggerIndex == 0) {
+        stopProcessRunningTrigger();
+    } else if (prevUnlimitTriggerIndex == 1) {
+        stopProcessForegroundTrigger();
+    }
+
+    // setup new trigger method
+    if (index == 0) {
+        setupProcessRunningTrigger();
+    } else if (index == 1) {
+        setupProcessForegroundTrigger();
+    }
+
+    config["unlimit_trigger"] = index;
+    saveConfig();
 }
 
 void limitnvpstate::selectedGPUChanged(int index) {
@@ -322,6 +432,11 @@ void limitnvpstate::exitApp(int exitCode) {
     }
 
     // cleanup
-    UnhookWinEvent(eventHook);
+    if (config["unlimit_trigger"] == 0) {
+        stopProcessRunningTrigger();
+    } else if (config["unlimit_trigger"] == 1) {
+        stopProcessForegroundTrigger();
+    }
+
     exit(exitCode);
 }

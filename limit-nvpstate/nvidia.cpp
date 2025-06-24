@@ -6,7 +6,7 @@ typedef void* (*QueryPtr)(uint32_t);
 
 HMODULE hNvAPI;
 std::string NVAPI_DLL = "nvapi64.dll";
-bool isPStateUnlimited = true;
+bool isPStateUnlimited = true; // for caching purposes
 
 int initNvAPI() {
     if (NvAPI_Initialize() != 0) {
