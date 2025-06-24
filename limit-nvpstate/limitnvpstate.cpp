@@ -76,11 +76,11 @@ void pollProcesses() {
         // wait for process to exit
         if (processId >= 0) {
             HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, processId);
-            
+
             if (hProcess) {
-                std::cout << "waiting for " << processName << " to exit\n";
+                std::cout << "info: waiting for " << processName << " to exit\n";
                 WaitForSingleObject(hProcess, INFINITE); // wait indefinitely for the process to exit
-                std::cout << processName << " exited.\n";
+                std::cout << "info: " << processName << " exited\n";
                 CloseHandle(hProcess);
             } else {
                 std::cerr << "info: failed to open process: " << processName << " \n";
